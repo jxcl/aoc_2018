@@ -1,0 +1,91 @@
+#[macro_use]
+extern crate lazy_static;
+extern crate regex;
+
+use std::collections::HashMap;
+
+use regex::Regex;
+
+struct GuardHistory(HashMap<u32, ShiftHistory>);
+
+enum GuardEvent {
+    GuardSwitch(u64),
+    WakeUp,
+    FallAsleep,
+}
+
+struct DateTime {
+    month: u8,
+    day: u8,
+
+    hour: u8,
+    minute: u8,
+}
+
+struct ShiftHistory {
+    date: (u8, u8),
+    state_history: Vec<bool>,
+}
+
+fn parse_dt(line: &str) -> (DateTime, &str) {
+    lazy_static! {
+        static ref LINE_RE: Regex = Regex::new(r"\[1518-(\d+)-(\d+) (\d+):(\d+)\] (*)\n").unwrap();
+    }
+
+    let caps = LINE_RE.captures(line).unwrap();
+
+    let month: u8 = caps.get(1).unwrap().as_str().parse().unwrap();
+    let day: u8 = caps.get(2).unwrap().as_str().parse().unwrap();
+
+    let hour: u8 = caps.get(3).unwrap().as_str().parse().unwrap();
+    let minute: u8 = caps.get(4).unwrap().as_str().parse().unwrap();
+
+    let rest = caps.get(5).unwrap().as_str();
+
+    (DateTime{ month, day, hour, minute }, rest)
+}
+
+fn parse_event(event: &str) -> GuardEvent {
+    lazy_static! {
+        static ref GUARD_SHIFT_RE: Regex = Regex::new(r"Guard #(\d+) begins shift").unwrap();
+    }
+
+    if let Some(caps) = GUARD_SHIFT_RE.captures(event) {
+        return GuardEvent::GuardSwitch(caps.get(1).unwrap().as_str().parse().unwrap());
+    }
+
+    if event == "falls asleep" {
+        return GuardEvent::FallAsleep;
+    } else {
+        return GuardEvent::WakeUp;
+    }
+}
+
+fn parse_input(input: &str) -> GuardHistory {
+    let mut guards = GuardHistory(HashMap::new());
+
+    let mut current_guard_id;
+    let mut current_day;
+    let mut last_event_time;
+
+    for line in input.lines() {
+        let (dt, info) = parse_dt(line);
+        
+        
+        match parse_event(info) {
+            GuardEvent::GuardSwitch(guard_id) => {
+                current_guard_id = guard_id;
+            },
+            GuardEvent::FallAsleep => {
+
+            },
+            GuardEvent::WakeUp => {
+
+            },
+        }
+    }
+}
+
+fn main() {
+    println!("Hello, world!");
+}
